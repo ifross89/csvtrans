@@ -27,7 +27,7 @@ func RunFile(inFile, outFile string, f RowTransformer) error {
 	}
 	defer out.Close()
 
-	err = processCsv(in, out, f)
+	err = Run(in, out, f)
 	if err != nil {
 		return err
 	}
