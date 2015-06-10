@@ -8,32 +8,27 @@ import (
 	"os"
 )
 
+// RowTransformer is a function that transforms a CSV row.
 type RowTransformer func(i int, inRow []string) (outRow []string, err error)
 
-func RunFile(inFile, outFile string, f RowTransformer) error {
-	if inFile == outFile {
-		return errors.New("inFile and outFile must be different")
-	}
+// BufRowTransformer is similar to RowTransformer, but also takes a buffer which
+// should be returned. This allows the output CSV to reuse a buffer between
+// calls, to reduce garbage
+type BufRowTransformer func(i int, inRow []string, outRow []string) (outRow []string, err error)
 
-	in, err := os.Open(inFile) // Read access
-	if err != nil {
-		return fmt.Errorf("Error reading %s: %v", inFile, err)
+// Creates a RowTransformer from a BufRowTransformer which reuses the same buffer.
+// Note that when using a BufRowTransformer with this that every field must be
+// set each iteration, or values will be repeated between rows.
+// length is the number of columns in the output CSV
+func MakeRowTransformer(length int, f BufRowTransformer) RowTransformer {
+	buf := make([]string, length, length)
+	return func(i int, inRow []string) ([]string, error) {
+		return f(i, inRow, buf)
 	}
-	defer in.Close()
-
-	out, err := os.Create(outFile)
-	if err != nil {
-		return fmt.Errorf("Error opening %s for write: %v", outFile, err)
-	}
-	defer out.Close()
-
-	err = Run(in, out, f)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
+// Run performs the transformation on the CSV given an input reader, output
+// writer and a function to transform each row.
 func Run(in io.Reader, out io.Writer, f RowTransformer) error {
 	inCsv := csv.NewReader(in)
 	outCsv := csv.NewWriter(out)
@@ -61,3 +56,31 @@ func Run(in io.Reader, out io.Writer, f RowTransformer) error {
 		i += 1
 	}
 }
+
+// RunFile is a wrapper around Run. This uses files as the input and output.
+// Different filenames must be passed in to the function.
+// If an output file already exists, it will be replaced.
+func RunFile(inFile, outFile string, f RowTransformer) error {
+	if inFile == outFile {
+		return errors.New("inFile and outFile must be different")
+	}
+
+	in, err := os.Open(inFile) // Read access
+	if err != nil {
+		return fmt.Errorf("Error reading %s: %v", inFile, err)
+	}
+	defer in.Close()
+
+	out, err := os.Create(outFile)
+	if err != nil {
+		return fmt.Errorf("Error opening %s for write: %v", outFile, err)
+	}
+	defer out.Close()
+
+	err = Run(in, out, f)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
