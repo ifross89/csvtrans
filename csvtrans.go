@@ -9,6 +9,8 @@ import (
 )
 
 // RowTransformer is a function that transforms a CSV row.
+// If an error is returned, the CSV transformation will terminate.
+// If a row is to be skipped, return with outRow and err == nil
 type RowTransformer func(i int, inRow []string) (outRow []string, err error)
 
 // BufRowTransformer is similar to RowTransformer, but also takes a buffer which
@@ -49,10 +51,14 @@ func Run(in io.Reader, out io.Writer, f RowTransformer) error {
 			return fmt.Errorf("Error transforming row at index %d: %v", i, err)
 		}
 
-		err = outCsv.Write(transformed)
-		if err != nil {
-			return fmt.Errorf("Error writing CSV row at index %d: %v", i, err)
+		// Skip if row is nil and no error
+		if transformed != nil {
+			err = outCsv.Write(transformed)
+			if err != nil {
+				return fmt.Errorf("Error writing CSV row at index %d: %v", i, err)
+			}
 		}
+
 		i += 1
 	}
 }
