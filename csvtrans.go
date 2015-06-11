@@ -14,7 +14,7 @@ type RowTransformer func(i int, inRow []string) (outRow []string, err error)
 // BufRowTransformer is similar to RowTransformer, but also takes a buffer which
 // should be returned. This allows the output CSV to reuse a buffer between
 // calls, to reduce garbage
-type BufRowTransformer func(i int, inRow []string, outRow []string) (outRow []string, err error)
+type BufRowTransformer func(i int, inRow []string, outRow []string) ([]string, error)
 
 // Creates a RowTransformer from a BufRowTransformer which reuses the same buffer.
 // Note that when using a BufRowTransformer with this that every field must be
