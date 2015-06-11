@@ -1,13 +1,13 @@
 package csvtrans
 
 import (
-	"strings"
 	"bytes"
-	"testing"
-	"strconv"
 	"fmt"
-	"os"
 	"io/ioutil"
+	"os"
+	"strconv"
+	"strings"
+	"testing"
 )
 
 func identTrans(_ int, in []string) ([]string, error) {
@@ -20,16 +20,16 @@ func double(_ int, in []string) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		in[i] = fmt.Sprintf("%d", val * 2)
+		in[i] = fmt.Sprintf("%d", val*2)
 	}
 	return in, nil
 }
 
 var goodRunTests = []struct {
-	in string
-	out string
+	in        string
+	out       string
 	transform RowTransformer
-} {
+}{
 	{
 		"a,b\n1,2\n",
 		"a,b\n1,2\n",
@@ -82,4 +82,3 @@ func TestGoodRunFile(t *testing.T) {
 		t.Fatalf("Expected input and output to be equal, in=%s, out=%s", inFile, outFile)
 	}
 }
-

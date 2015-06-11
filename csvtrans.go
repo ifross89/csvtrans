@@ -89,4 +89,3 @@ func RunFile(inFile, outFile string, f RowTransformer) error {
 	}
 	return nil
 }
-
